@@ -8,15 +8,8 @@ export class Cart {
   }
 
   addItem(item: IProduct) {
-    const existingItems = this.items.find(
-      (cartItem) => cartItem.id === item.id
-    );
-    if (existingItems) {
-      console.log(`Товар "${item.title}" уже есть в корзине`);
-      return;
-    }
     this.items.push(item);
-    console.log(`Товар "${item.title}" добавлен в корзину`);
+    return true;
   }
   removeItem(id: string) {
     this.items = this.items.filter((items) => items.id !== id);
