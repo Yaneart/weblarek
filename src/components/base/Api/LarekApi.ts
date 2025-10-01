@@ -10,7 +10,6 @@ export class LarekApi {
   async getProductList(): Promise<IProduct[]> {
     try {
       const response = (await this.api.get("/api/weblarek/product/")) as {
-        // пытался пытался так и не понял как мне тут просто /product/ поставить, работает только так :(
         items: IProduct[];
       };
       return response.items;
@@ -22,7 +21,10 @@ export class LarekApi {
 
   async submitOrder(orderData: IOrderData): Promise<OrderResult> {
     try {
-      const response = (await this.api.post("/order/", orderData)) as {
+      const response = (await this.api.post(
+        "/api/weblarek/order/",
+        orderData
+      )) as {
         id: string;
         total: number;
       };

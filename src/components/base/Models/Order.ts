@@ -1,6 +1,7 @@
 import { IBuyer, TPayment } from "../../../types/index";
+import { EventEmitter } from "../Events";
 
-export class Order implements IBuyer {
+export class Order extends EventEmitter implements IBuyer {
   payment: TPayment;
   address: string;
   phone: string;
@@ -12,10 +13,55 @@ export class Order implements IBuyer {
     email?: string,
     payment: TPayment = "card"
   ) {
+    super();
     this.payment = payment;
     this.address = address || "";
     this.phone = phone || "";
     this.email = email || "";
+  }
+
+  setPaymentMethod(payment: string): void {
+    this.payment = payment as TPayment;
+    this.emit("order:changed");
+  }
+
+  setAddress(address: string): void {
+    this.address = address;
+    this.emit("order:changed");
+  }
+
+  setPhone(phone: string): void {
+    this.phone = phone;
+    this.emit("order:changed");
+  }
+
+  setEmail(email: string): void {
+    this.email = email;
+    this.emit("order:changed");
+  }
+
+  getPaymentMethod(): string {
+    return this.payment;
+  }
+
+  getAddress(): string {
+    return this.address;
+  }
+
+  getEmail(): string {
+    return this.email;
+  }
+
+  getPhone(): string {
+    return this.phone;
+  }
+
+  validateContacts(): boolean {
+    const emailValid = this.email.includes("@") && this.email.includes(".");
+
+    const digitsOnly = this.phone.replace(/\D/g, "");
+    const phoneValid = digitsOnly.length >= 11;
+    return emailValid && phoneValid;
   }
 
   setOrderFields(fields: Partial<IBuyer>) {
@@ -31,22 +77,7 @@ export class Order implements IBuyer {
     if (fields.email !== undefined) {
       this.email = fields.email;
     }
-  }
-
-  setPayment(payment: TPayment) {
-    this.payment = payment;
-  }
-
-  setAddress(address: string) {
-    this.address = address;
-  }
-
-  setPhone(phone: string) {
-    this.phone = phone;
-  }
-
-  setEmail(email: string) {
-    this.email = email;
+    this.emit("order:changed");
   }
 
   getOrderData(): IBuyer {
@@ -63,25 +94,14 @@ export class Order implements IBuyer {
     this.address = "";
     this.phone = "";
     this.email = "";
+    this.emit("order:changed");
   }
+
   validateOrder() {
     if (!this.payment || (this.payment !== "cash" && this.payment !== "card")) {
       return false;
     }
     if (!this.address || this.address.length === 0) {
-      return false;
-    }
-    const phoneRegex =
-      /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,4}$/;
-    if (
-      !this.phone ||
-      this.phone.length === 0 ||
-      !phoneRegex.test(this.phone)
-    ) {
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!this.email || !emailRegex.test(this.email)) {
       return false;
     }
     return true;

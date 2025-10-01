@@ -11,11 +11,20 @@ export interface IApi {
 
 export interface IProduct {
   id: string;
-  description: string;
+  description?: string;
   image: string;
   title: string;
   category: string;
   price: number | null;
+}
+
+export interface ICardCatalogData extends IProduct {
+  buttonText: string;
+  buttonDisabled: boolean;
+}
+
+export interface ICardBasketData extends IProduct {
+  index: number;
 }
 
 export interface IBuyer {
@@ -38,5 +47,24 @@ export interface IOrderData {
 
 export interface OrderResult {
   id: string;
+  total: number;
+}
+
+export interface IOrderForm {
+  address: string;
+  payment: string;
+}
+
+export interface IContactsForm {
+  email: string;
+  phone: string;
+}
+
+export interface ISuccess {
+  total: number;
+}
+
+export interface IBasket {
+  items: IProduct[];
   total: number;
 }
