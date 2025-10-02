@@ -1,7 +1,7 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
-import { IProduct } from "../../../../types";
-import { categoryMap } from "../../../../utils/constants";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
+import { IProduct } from "../../../types";
+import { categoryMap } from "../../../utils/constants";
 
 export class Card extends Component<IProduct> {
   protected _title: HTMLElement;

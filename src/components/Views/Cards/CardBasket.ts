@@ -1,6 +1,6 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
-import { ICardBasketData } from "../../../../types";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
+import { ICardBasketData } from "../../../types";
 
 interface ICardActions {
   onClick: (event: MouseEvent) => void;

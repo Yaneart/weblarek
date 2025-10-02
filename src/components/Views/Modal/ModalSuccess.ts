@@ -1,6 +1,6 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
-import { ISuccess } from "../../../../types";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
+import { ISuccess } from "../../../types";
 
 interface ISuccessActions {
   onClick: (event: MouseEvent) => void;

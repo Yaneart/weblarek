@@ -1,6 +1,6 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
-import { IOrderForm } from "../../../../types";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
+import { IOrderForm } from "../../../types";
 
 interface IOrderActions {
   onPaymentChange: (payment: string) => void;

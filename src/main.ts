@@ -1,22 +1,23 @@
 import "./scss/styles.scss";
-import { Cart } from "./components/base/Models/Cart";
-import { Order } from "./components/base/Models/Order";
-import { ProductList } from "./components/base/Models/ProductList";
+import { Cart } from "./components/Models/Cart";
+import { Order } from "./components/Models/Order";
+import { ProductList } from "./components/Models/ProductList";
 import { Api } from "./components/base/Api";
-import { LarekApi } from "./components/base/Api/LarekApi";
+import { LarekApi } from "./components/Api/LarekApi";
 import { ensureElement, cloneTemplate } from "./utils/utils";
 import { EventEmitter } from "./components/base/Events";
 import { TPayment, IOrderData } from "./types";
-import { Page } from "./components/base/Views/Page";
-import { CardCatalog } from "./components/base/Views/Cards/CardCatalog";
-import { CardPreview } from "./components/base/Views/Cards/CardPreview";
-import { CardBasket } from "./components/base/Views/Cards/CardBasket";
-import { Modal } from "./components/base/Views/Modal/Modal";
-import { ModalBasket } from "./components/base/Views/Modal/ModalBasket";
-import { ModalOrder } from "./components/base/Views/Modal/ModalOrder";
-import { ModalContacts } from "./components/base/Views/Modal/ModalContacts";
-import { ModalSuccess } from "./components/base/Views/Modal/ModalSuccess";
+import { Page } from "./components/Views/Page";
+import { CardCatalog } from "./components/Views/Cards/CardCatalog";
+import { CardPreview } from "./components/Views/Cards/CardPreview";
+import { CardBasket } from "./components/Views/Cards/CardBasket";
+import { Modal } from "./components/Views/Modal/Modal";
+import { ModalBasket } from "./components/Views/Modal/ModalBasket";
+import { ModalOrder } from "./components/Views/Modal/ModalOrder";
+import { ModalContacts } from "./components/Views/Modal/ModalContacts";
+import { ModalSuccess } from "./components/Views/Modal/ModalSuccess";
 import { CDN_URL } from "./utils/constants";
+import { Header } from "./components/Views/Header";
 
 const API_URL =
   import.meta.env.VITE_API_ORIGIN || "https://larek-api.nomoreparties.co";
@@ -27,10 +28,9 @@ const larekApi = new LarekApi(api);
 const cart = new Cart();
 const productList = new ProductList();
 const order = new Order();
+const header = new Header(events, ensureElement<HTMLElement>(".header"));
 
-const page = new Page(ensureElement<HTMLElement>(".page"), {
-  onBasketClick: () => events.emit("basket:open"),
-});
+const page = new Page(ensureElement<HTMLElement>(".page"));
 
 const modal = new Modal(events, ensureElement<HTMLElement>("#modal-container"));
 
@@ -157,6 +157,21 @@ events.on("modal:close", () => {
   page.locked = false;
 });
 
+events.on("cart:changed", () => {
+  // Если модальное окно открыто и показывает превью товара
+  if (modal.open && modal.contents?.classList.contains("card")) {
+    const productId = modal.contents
+      .querySelector(".card")
+      ?.getAttribute("data-id");
+    if (productId) {
+      const product = productList.getProduct(productId);
+      if (product) {
+        openProductPreview(product); // Перерисовываем превью с обновленным состоянием кнопки
+      }
+    }
+  }
+});
+
 function renderCatalog(): void {
   const products = productList.getProducts();
   console.log("Рендеринг каталога:", products);
@@ -188,7 +203,7 @@ function renderBasket(): void {
   const items = cart.getItems();
   console.log("Рендеринг корзины:", items);
 
-  page.counter = items.length;
+  header.counter = items.length;
 
   modalBasket.total = cart.getTotalPrice();
   modalBasket.buttonDisabled = items.length === 0;
@@ -207,16 +222,22 @@ function renderBasket(): void {
     });
   });
 
-  const basketList = modalBasket.container.querySelector(".basket__list");
-  if (basketList) {
-    basketList.replaceChildren(...basketItems);
-  }
+  modalBasket.list = basketItems;
 }
 
 function openProductPreview(product: any): void {
   const cardElement = cloneTemplate("#card-preview");
+  const isInCart = cart.checkProductInCart(product.id);
+
   const card = new CardPreview(cardElement, {
-    onClick: () => events.emit("card:add", { id: product.id }),
+    onClick: () => {
+      if (isInCart) {
+        events.emit("basket:remove", { id: product.id });
+        events.emit("modal:close");
+      } else {
+        events.emit("card:add", { id: product.id });
+      }
+    },
   });
 
   const renderedCard = card.render({
@@ -226,6 +247,7 @@ function openProductPreview(product: any): void {
     category: product.category,
     price: product.price,
     description: product.description,
+    buttonText: isInCart ? "Удалить из корзины" : "В корзину",
   });
 
   modal.contents = renderedCard;

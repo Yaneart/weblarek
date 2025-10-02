@@ -1,5 +1,5 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
 
 interface IBasketActions {
   onClick: (event: MouseEvent) => void;
@@ -11,6 +11,7 @@ export class ModalBasket extends Component<{
 }> {
   protected _total: HTMLElement;
   protected _button: HTMLButtonElement;
+  protected _list: HTMLElement;
 
   constructor(container: HTMLElement, actions?: IBasketActions) {
     super(container);
@@ -19,10 +20,15 @@ export class ModalBasket extends Component<{
       ".basket__button",
       container
     );
+    this._list = ensureElement<HTMLElement>(".basket__list", container);
 
     if (actions?.onClick) {
       this._button.addEventListener("click", actions.onClick);
     }
+  }
+
+  set list(items: HTMLElement[]) {
+    this._list.replaceChildren(...items);
   }
 
   set total(value: number) {

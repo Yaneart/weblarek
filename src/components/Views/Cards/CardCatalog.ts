@@ -1,5 +1,5 @@
 import { Card } from "./Card";
-import { ICardCatalogData } from "../../../../types";
+import { ICardCatalogData } from "../../../types";
 
 interface ICardActions {
   onClick: (event: MouseEvent) => void;

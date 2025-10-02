@@ -1,12 +1,8 @@
-import { Component } from "../Component";
-import { ensureElement } from "../../../utils/utils";
+import { Component } from "../base/Component";
+import { ensureElement } from "../../utils/utils";
 
 interface IPageData {
   counter: number;
-}
-
-interface IPageActions {
-  onBasketClick: (event: MouseEvent) => void;
 }
 
 export class Page extends Component<IPageData> {
@@ -15,7 +11,7 @@ export class Page extends Component<IPageData> {
   protected _wrapper: HTMLElement;
   protected _basket: HTMLElement;
 
-  constructor(container: HTMLElement, actions?: IPageActions) {
+  constructor(container: HTMLElement) {
     super(container);
     this._counter = ensureElement<HTMLElement>(
       ".header__basket-counter",
@@ -30,14 +26,6 @@ export class Page extends Component<IPageData> {
       ".header__basket",
       this.container
     );
-
-    if (actions?.onBasketClick) {
-      this._basket.addEventListener("click", actions.onBasketClick);
-    }
-  }
-
-  set counter(value: number) {
-    this.setText(this._counter, String(value));
   }
 
   set catalog(items: HTMLElement[]) {

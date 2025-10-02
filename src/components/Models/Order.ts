@@ -1,5 +1,5 @@
-import { IBuyer, TPayment } from "../../../types/index";
-import { EventEmitter } from "../Events";
+import { IBuyer, TPayment } from "../../types";
+import { EventEmitter } from "../base/Events";
 
 export class Order extends EventEmitter implements IBuyer {
   payment: TPayment;

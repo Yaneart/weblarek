@@ -1,8 +1,13 @@
 import { Card } from "./Card";
-import { ensureElement } from "../../../../utils/utils";
+import { ensureElement } from "../../../utils/utils";
+import { IProduct } from "../../../types";
 
 interface ICardActions {
   onClick: (event: MouseEvent) => void;
+}
+
+interface ICardPreviewData extends IProduct {
+  buttonText?: string;
 }
 
 export class CardPreview extends Card {
@@ -19,7 +24,23 @@ export class CardPreview extends Card {
     }
   }
 
-  set description(value: string) {
-    this.setText(this._description, value);
+  set buttonText(value: string) {
+    this.setText(this._button, value);
+  }
+
+  set description(value: string | undefined) {
+    this.setText(this._description, value || "");
+  }
+
+  render(data: ICardPreviewData): HTMLElement {
+    super.render(data);
+
+    this.description = data.description;
+
+    if (data.buttonText) {
+      this.buttonText = data.buttonText;
+    }
+
+    return this.container;
   }
 }

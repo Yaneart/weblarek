@@ -1,5 +1,5 @@
-import { Component } from "../../Component";
-import { ensureElement } from "../../../../utils/utils";
+import { Component } from "../../base/Component";
+import { ensureElement } from "../../../utils/utils";
 
 export class ModalCard extends Component<{ title: string }> {
   protected _title: HTMLElement;
