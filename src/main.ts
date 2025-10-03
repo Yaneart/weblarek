@@ -6,7 +6,13 @@ import { Api } from "./components/base/Api";
 import { LarekApi } from "./components/Api/LarekApi";
 import { ensureElement, cloneTemplate } from "./utils/utils";
 import { EventEmitter } from "./components/base/Events";
-import { TPayment, IOrderData } from "./types";
+import {
+  TPayment,
+  IOrderData,
+  IOrderForm,
+  IContactsForm,
+  IProduct,
+} from "./types";
 import { Page } from "./components/Views/Page";
 import { CardCatalog } from "./components/Views/Cards/CardCatalog";
 import { CardPreview } from "./components/Views/Cards/CardPreview";
@@ -41,11 +47,15 @@ const modalBasket = new ModalBasket(cloneTemplate("#basket"), {
 const modalOrder = new ModalOrder(cloneTemplate("#order"), {
   onPaymentChange: (payment: string) =>
     events.emit("order.payment:change", { payment }),
-  onSubmit: (data: any) => events.emit("order:submit", data),
+  onSubmit: (data: IOrderForm) => events.emit("order:submit", data),
+  onInput: (field: string, value: string) =>
+    events.emit("order:input", { field, value }),
 });
 
 const modalContacts = new ModalContacts(cloneTemplate("#contacts"), {
-  onSubmit: (data: any) => events.emit("contacts:submit", data),
+  onInput: (field: string, value: string) =>
+    events.emit("contacts:input", { field, value }),
+  onSubmit: (data: IContactsForm) => events.emit("contacts:submit", data),
 });
 
 const modalSuccess = new ModalSuccess(cloneTemplate("#success"), {
@@ -88,28 +98,46 @@ events.on("order:open", () => {
 
 events.on("order.payment:change", (data: { payment: string }) => {
   order.setPaymentMethod(data.payment);
-  validateOrderForm();
+  const validation = order.validateOrderForm();
+  modalOrder.setErrors(validation.errors);
+  modalOrder.setFormState(validation.isValid);
 });
 
-events.on("order:submit", (data: any) => {
+events.on("order:submit", (data: IOrderForm) => {
   console.log("Форма заказа отправлена:", data);
   order.setAddress(data.address);
 
-  if (order.validateOrder()) {
+  const validation = order.validateOrderForm();
+  if (validation.isValid) {
     modal.contents = modalContacts.render();
     modal.open = true;
   } else {
     console.log("Заказ не прошел валидацию");
+    modalOrder.setErrors(validation.errors);
+    modalOrder.setFormState(false);
   }
 });
 
-events.on("contacts:submit", async (data: any) => {
+events.on("contacts:input", (data: { field: string; value: string }) => {
+  if (data.field === "email") {
+    order.setEmail(data.value);
+  } else if (data.field === "phone") {
+    order.setPhone(data.value);
+  }
+
+  const validation = order.validateContacts();
+  modalContacts.setErrors(validation.errors);
+  modalContacts.setFormState(validation.isValid);
+});
+
+events.on("contacts:submit", async (data: IContactsForm) => {
   console.log("Форма отправлена:", data);
 
   order.setEmail(data.email);
   order.setPhone(data.phone);
 
-  if (order.validateContacts()) {
+  const validation = order.validateContacts();
+  if (validation.isValid) {
     try {
       const paymentMethod = order.getPaymentMethod() as TPayment;
 
@@ -138,11 +166,24 @@ events.on("contacts:submit", async (data: any) => {
     }
   } else {
     console.log("Заказ не прошел валидацию");
+    modalContacts.setErrors(validation.errors);
+    modalContacts.setFormState(false);
   }
+});
+
+events.on("order:input", (data: { field: string; value: string }) => {
+  if (data.field === "address") {
+    order.setAddress(data.value);
+  }
+
+  const validation = order.validateOrderForm();
+  modalOrder.setErrors(validation.errors);
+  modalOrder.setFormState(validation.isValid);
 });
 
 events.on("modal:close", () => {
   modal.open = false;
+  page.locked = false;
 });
 
 events.on("success:close", () => {
@@ -153,12 +194,7 @@ events.on("modal:open", () => {
   page.locked = true;
 });
 
-events.on("modal:close", () => {
-  page.locked = false;
-});
-
 events.on("cart:changed", () => {
-  // Если модальное окно открыто и показывает превью товара
   if (modal.open && modal.contents?.classList.contains("card")) {
     const productId = modal.contents
       .querySelector(".card")
@@ -166,7 +202,7 @@ events.on("cart:changed", () => {
     if (productId) {
       const product = productList.getProduct(productId);
       if (product) {
-        openProductPreview(product); // Перерисовываем превью с обновленным состоянием кнопки
+        openProductPreview(product);
       }
     }
   }
@@ -225,7 +261,7 @@ function renderBasket(): void {
   modalBasket.list = basketItems;
 }
 
-function openProductPreview(product: any): void {
+function openProductPreview(product: IProduct): void {
   const cardElement = cloneTemplate("#card-preview");
   const isInCart = cart.checkProductInCart(product.id);
 
@@ -252,12 +288,6 @@ function openProductPreview(product: any): void {
 
   modal.contents = renderedCard;
   modal.open = true;
-}
-
-function validateOrderForm(): void {
-  const isOrderValid =
-    order.getAddress().length > 0 && order.getPaymentMethod().length > 0;
-  modalOrder.buttonDisabled = !isOrderValid;
 }
 
 async function loadProducts() {

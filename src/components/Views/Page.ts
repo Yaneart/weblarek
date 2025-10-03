@@ -6,24 +6,14 @@ interface IPageData {
 }
 
 export class Page extends Component<IPageData> {
-  protected _counter: HTMLElement;
   protected _catalog: HTMLElement;
   protected _wrapper: HTMLElement;
-  protected _basket: HTMLElement;
 
   constructor(container: HTMLElement) {
     super(container);
-    this._counter = ensureElement<HTMLElement>(
-      ".header__basket-counter",
-      this.container
-    );
     this._catalog = ensureElement<HTMLElement>(".gallery", this.container);
     this._wrapper = ensureElement<HTMLElement>(
       ".page__wrapper",
-      this.container
-    );
-    this._basket = ensureElement<HTMLElement>(
-      ".header__basket",
       this.container
     );
   }

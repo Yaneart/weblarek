@@ -56,14 +56,6 @@ export class Order extends EventEmitter implements IBuyer {
     return this.phone;
   }
 
-  validateContacts(): boolean {
-    const emailValid = this.email.includes("@") && this.email.includes(".");
-
-    const digitsOnly = this.phone.replace(/\D/g, "");
-    const phoneValid = digitsOnly.length >= 11;
-    return emailValid && phoneValid;
-  }
-
   setOrderFields(fields: Partial<IBuyer>) {
     if (fields.payment !== undefined) {
       this.payment = fields.payment;
@@ -97,13 +89,68 @@ export class Order extends EventEmitter implements IBuyer {
     this.emit("order:changed");
   }
 
-  validateOrder() {
-    if (!this.payment || (this.payment !== "cash" && this.payment !== "card")) {
-      return false;
+  validateField(field: keyof IBuyer, value: string): string {
+    switch (field) {
+      case "email":
+        return this.validateEmail(value);
+      case "phone":
+        return this.validatePhone(value);
+      case "address":
+        return this.validateAddress(value);
+      case "payment":
+        return this.validatePayment(value);
+      default:
+        return "";
     }
-    if (!this.address || this.address.length === 0) {
-      return false;
-    }
-    return true;
+  }
+
+  validateContacts(): {
+    isValid: boolean;
+    errors: { email: string; phone: string };
+  } {
+    const emailError = this.validateEmail(this.email);
+    const phoneError = this.validatePhone(this.phone);
+
+    return {
+      isValid: !emailError && !phoneError,
+      errors: { email: emailError, phone: phoneError },
+    };
+  }
+
+  validateOrderForm(): {
+    isValid: boolean;
+    errors: { address: string; payment: string };
+  } {
+    const addressError = this.validateAddress(this.address);
+    const paymentError = this.validatePayment(this.payment);
+
+    return {
+      isValid: !addressError && !paymentError,
+      errors: { address: addressError, payment: paymentError },
+    };
+  }
+
+  private validateEmail(email: string): string {
+    if (!email) return "Email обязателен";
+    if (!email.includes("@") || !email.includes("."))
+      return "Введите корректный email";
+    return "";
+  }
+
+  private validatePhone(phone: string): string {
+    if (!phone) return "Телефон обязателен";
+    const digitsOnly = phone.replace(/\D/g, "");
+    if (digitsOnly.length < 10) return "Не менее 10 цифр";
+    return "";
+  }
+
+  private validateAddress(address: string): string {
+    if (!address) return "Адрес обязателен";
+    return "";
+  }
+
+  private validatePayment(payment: string): string {
+    if (!payment) return "Выберите способ оплаты";
+    return "";
   }
 }

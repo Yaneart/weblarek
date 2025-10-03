@@ -4,6 +4,7 @@ import { IContactsForm } from "../../../types";
 
 interface IContactsActions {
   onSubmit: (data: IContactsForm) => void;
+  onInput: (field: string, value: string) => void;
 }
 
 export class ModalContacts extends Component<IContactsForm> {
@@ -23,52 +24,52 @@ export class ModalContacts extends Component<IContactsForm> {
     );
     this._button = ensureElement<HTMLButtonElement>(".button", container);
 
-    this._email.addEventListener("input", this.validateForm.bind(this));
-    this._phone.addEventListener("input", this.validateForm.bind(this));
+    this._email.addEventListener("input", () =>
+      actions?.onInput?.("email", this._email.value)
+    );
+    this._phone.addEventListener("input", () =>
+      actions?.onInput?.("phone", this._phone.value)
+    );
 
     this._button.addEventListener("click", (event) => {
       event.preventDefault();
-
-      const formData = {
-        email: this._email.value.trim(),
-        phone: this._phone.value.trim(),
-      };
-
-      actions?.onSubmit?.(formData);
+      actions?.onSubmit?.({
+        email: this._email.value,
+        phone: this._phone.value,
+      });
     });
-
-    this.setDisabled(this._button, true);
   }
 
-  private validateForm = (): void => {
-    const email = this._email.value.trim();
-    const phone = this._phone.value.trim();
+  setErrors(errors: { email?: string; phone?: string }): void {
+    this.setError(this._email, errors.email);
+    this.setError(this._phone, errors.phone);
+  }
 
-    const isEmailValid = email.includes("@") && email.includes(".");
-    const isPhoneValid = phone.replace(/\D/g, "").length >= 10;
+  setFormState(valid: boolean): void {
+    this.setDisabled(this._button, !valid);
+    if (valid) this.clearErrors();
+  }
 
-    const emailError = !isEmailValid && email ? "Введите корректный email" : "";
-    const phoneError = !isPhoneValid && phone ? "Не менее 10 цифр" : "";
-
-    this.setDisabled(this._button, !(isEmailValid && isPhoneValid));
-
-    this.showError(this._email, emailError);
-    this.showError(this._phone, phoneError);
-  };
-
-  private showError(input: HTMLInputElement, error: string): void {
-    const existing = input.parentNode?.querySelector(".error-message");
-    existing?.remove();
-
-    input.classList.toggle("error", !!error);
-
-    if (error && input.parentNode) {
+  private setError(input: HTMLInputElement, error?: string): void {
+    this.clearError(input);
+    if (error) {
+      input.classList.add("error");
       const errorEl = document.createElement("div");
       errorEl.className = "error-message";
-      errorEl.style.cssText = "color:red;text-size:12px";
+      errorEl.style.cssText = "color:red";
       errorEl.textContent = error;
-      input.parentNode.appendChild(errorEl);
+      input.parentNode?.appendChild(errorEl);
     }
+  }
+
+  private clearError(input: HTMLInputElement): void {
+    input.classList.remove("error");
+    input.parentNode?.querySelector(".error-message")?.remove();
+  }
+
+  private clearErrors(): void {
+    this.clearError(this._email);
+    this.clearError(this._phone);
   }
 
   set email(value: string) {

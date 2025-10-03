@@ -5,6 +5,7 @@ import { IOrderForm } from "../../../types";
 interface IOrderActions {
   onPaymentChange: (payment: string) => void;
   onSubmit: (data: IOrderForm) => void;
+  onInput: (field: string, value: string) => void;
 }
 
 export class ModalOrder extends Component<IOrderForm> {
@@ -26,13 +27,9 @@ export class ModalOrder extends Component<IOrderForm> {
       container
     );
 
-    const checkValidity = () => {
-      const hasAddress = this._address.value.trim().length > 0;
-      const hasPayment = this._paymentButtons.some((btn) =>
-        btn.classList.contains("button_alt-active")
-      );
-      this.setDisabled(this._button, !(hasAddress && hasPayment));
-    };
+    this._address.addEventListener("input", () => {
+      actions?.onInput?.("address", this._address.value);
+    });
 
     this._paymentButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -41,16 +38,43 @@ export class ModalOrder extends Component<IOrderForm> {
         );
         this.toggleClass(button, "button_alt-active", true);
         actions?.onPaymentChange?.(button.name);
-        checkValidity();
       });
     });
-
-    this._address.addEventListener("input", checkValidity);
 
     this._button.addEventListener("click", (event) => {
       event.preventDefault();
       actions?.onSubmit?.(this.getFormData());
     });
+  }
+
+  setErrors(errors: { address?: string; payment?: string }): void {
+    this.setError(this._address, errors.address);
+  }
+
+  setFormState(valid: boolean): void {
+    this.setDisabled(this._button, !valid);
+    if (valid) this.clearErrors();
+  }
+
+  private setError(input: HTMLInputElement, error?: string): void {
+    this.clearError(input);
+    if (error) {
+      input.classList.add("error");
+      const errorEl = document.createElement("div");
+      errorEl.className = "error-message";
+      errorEl.style.cssText = "color:red";
+      errorEl.textContent = error;
+      input.parentNode?.appendChild(errorEl);
+    }
+  }
+
+  private clearError(input: HTMLInputElement): void {
+    input.classList.remove("error");
+    input.parentNode?.querySelector(".error-message")?.remove();
+  }
+
+  private clearErrors(): void {
+    this.clearError(this._address);
   }
 
   set address(value: string) {
